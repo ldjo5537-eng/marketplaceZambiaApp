@@ -13,7 +13,7 @@ import plotly.express as px
 from datetime import datetime
 
 # ===========================================================================
-# 1. DESIGN ET STYLES CSS (Fonctions utilitaires)
+# 1. DESIGN ET STYLES CSS
 # ===========================================================================
 
 PRIMARY_COLOR = "#0F5C4C"   # Vert profond
@@ -162,6 +162,12 @@ class ClientQuestionnaire:
 
     @classmethod
     def render(cls):
+        # Initialisation sécurisée des états de session
+        if "client_step" not in st.session_state:
+            st.session_state.client_step = 1
+        if "client_answers" not in st.session_state:
+            st.session_state.client_answers = {}
+
         page_header("Questionnaire Client", "Vos habitudes d'achat en ligne en Zambie", "🛍️")
 
         if st.session_state.get("client_excluded", False):
@@ -169,6 +175,8 @@ class ClientQuestionnaire:
             if st.button("↩️ Retour au choix du profil"):
                 st.session_state.current_page = "Home"
                 st.session_state.client_excluded = False
+                st.session_state.client_step = 1
+                st.session_state.client_answers = {}
                 st.rerun()
             return
 
@@ -183,7 +191,7 @@ class ClientQuestionnaire:
                 st.rerun()
             return
 
-        step = st.session_state.get("client_step", 1)
+        step = st.session_state.client_step
         st.progress(step / cls.TOTAL_STEPS, text=f"Étape {step} sur {cls.TOTAL_STEPS}")
         st.write("")
 
@@ -286,6 +294,12 @@ class VendorQuestionnaire:
 
     @classmethod
     def render(cls):
+        # Initialisation sécurisée des états de session
+        if "vendeur_step" not in st.session_state:
+            st.session_state.vendeur_step = 1
+        if "vendeur_answers" not in st.session_state:
+            st.session_state.vendeur_answers = {}
+
         page_header("Questionnaire Vendeur", "Vos besoins en tant que commerçant en Zambie", "🏬")
 
         if st.session_state.get("vendeur_excluded", False):
@@ -293,6 +307,8 @@ class VendorQuestionnaire:
             if st.button("↩️ Retour au choix du profil"):
                 st.session_state.current_page = "Home"
                 st.session_state.vendeur_excluded = False
+                st.session_state.vendeur_step = 1
+                st.session_state.vendeur_answers = {}
                 st.rerun()
             return
 
@@ -307,7 +323,7 @@ class VendorQuestionnaire:
                 st.rerun()
             return
 
-        step = st.session_state.get("vendeur_step", 1)
+        step = st.session_state.vendeur_step
         st.progress(step / cls.TOTAL_STEPS, text=f"Étape {step} sur {cls.TOTAL_STEPS}")
         st.write("")
 
@@ -384,7 +400,7 @@ class VendorQuestionnaire:
 
 
 # ===========================================================================
-# 4. DASHBOARD & VISUALISATION (Espace d'analyse)
+# 4. DASHBOARD & VISUALISATION
 # ===========================================================================
 
 class AnalyticsDashboard:
@@ -452,7 +468,7 @@ class AnalyticsDashboard:
 
 
 # ===========================================================================
-# 5. PAGE D'ACCUEIL & NAVIGATION PRINCIPALE
+# 5. PAGE D'ACCUEIL & NAVIGATION
 # ===========================================================================
 
 def render_home():
@@ -505,32 +521,36 @@ def main():
 
     inject_css()
 
-    # Initialisation de l'état de navigation
+    # Initialisation de l'état de la page active
     if "current_page" not in st.session_state:
         st.session_state.current_page = "Home"
 
     # Menu de navigation latéral
     with st.sidebar:
         st.title("🇿🇲 Menu")
-        selection = st.radio(
-            "Navigation :",
-            ["Accueil", "Questionnaire Client", "Questionnaire Vendeur", "Espace Analyse"],
-            index=["Home", "Client", "Vendeur", "Analytics"].index(st.session_state.current_page)
-            if st.session_state.current_page in ["Home", "Client", "Vendeur", "Analytics"] else 0
-        )
-
-        # Synchronisation de la sélection radio avec l'état global
+        page_list = ["Accueil", "Questionnaire Client", "Questionnaire Vendeur", "Espace Analyse"]
         page_mapping = {
             "Accueil": "Home",
             "Questionnaire Client": "Client",
             "Questionnaire Vendeur": "Vendeur",
             "Espace Analyse": "Analytics"
         }
+        
+        # Trouver l'index actuel
+        reverse_mapping = {v: k for k, v in page_mapping.items()}
+        current_label = reverse_mapping.get(st.session_state.current_page, "Accueil")
+        
+        selection = st.radio(
+            "Navigation :",
+            page_list,
+            index=page_list.index(current_label)
+        )
+
         if page_mapping[selection] != st.session_state.current_page:
             st.session_state.current_page = page_mapping[selection]
             st.rerun()
 
-    # Routage de l'affichage
+    # Routage
     if st.session_state.current_page == "Home":
         render_home()
     elif st.session_state.current_page == "Client":
