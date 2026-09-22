@@ -40,11 +40,16 @@ with col1:
             "Parlez-nous de vos habitudes d'achat en ligne, des difficultés "
             "rencontrées et de ce que vous attendez d'une nouvelle marketplace."
         )
-        st.page_link(
-            "pages/Questionnaire_Client.py",
-            label="Commencer le questionnaire Client",
-            icon="➡️",
-        )
+    st.page_link(
+    "pages/Questionnaire_Client.py",
+    label="Commencer le questionnaire Client",
+    icon="➡️",
+)
+        # st.page_link(
+        #     "pages/Questionnaire_Client.py",
+        #     label="Commencer le questionnaire Client",
+        #     icon="➡️",
+        # )
 
 with col2:
     with st.container(border=True):
