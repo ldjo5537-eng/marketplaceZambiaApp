@@ -131,30 +131,23 @@ def page_header(title: str, subtitle: str = "", icon: str = ""):
 # =============================================================================
 
 @st.cache_resource
-@st.cache_resource
 def get_gspread_client():
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive",
     ]
-    data = dict(st.secrets["google_credentials"])
 
-    # data = dict(st.secrets["gcp_service_account"])
+    data = dict(st.secrets["connections"]["gsheets"])
 
-    private_key = data["private_key"]
+    # On récupère la clé privée
+    private_key = data["private_key"].strip()
 
-    # Nettoyage robuste de la clé privée
-    private_key = private_key.strip()
-
-    # Si la valeur contient des caractères d'échappement littéraux
+    # Convertit les \n écrits dans secrets.toml en vrais retours à la ligne
     private_key = private_key.replace("\\r\\n", "\n")
     private_key = private_key.replace("\\n", "\n")
     private_key = private_key.replace("\\r", "\n")
 
-    # Supprime d'éventuels guillemets ajoutés accidentellement
-    private_key = private_key.strip('"').strip("'").strip()
-
-    # La clé doit commencer exactement par BEGIN
+    # Nettoyage de la clé
     begin = "-----BEGIN PRIVATE KEY-----"
     end = "-----END PRIVATE KEY-----"
 
@@ -163,13 +156,14 @@ def get_gspread_client():
 
     if start == -1 or finish == -1:
         raise ValueError(
-            "La private_key Google est mal formatée. "
-            "Elle doit contenir BEGIN PRIVATE KEY et END PRIVATE KEY."
+            "La private_key Google est mal formatée."
         )
 
     private_key = private_key[start:finish + len(end)] + "\n"
-
     data["private_key"] = private_key
+
+    # Le champ spreadsheet n'est pas utilisé par gspread
+    data.pop("spreadsheet", None)
 
     credentials = Credentials.from_service_account_info(
         data,
