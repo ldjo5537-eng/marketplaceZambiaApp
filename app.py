@@ -1,55 +1,51 @@
 import streamlit as st
-from common import inject_css, PRIMARY_COLOR
+from questionnaire_client import afficher_client
+from questionnaire_vendeur import afficher_vendeur
+from analyse import afficher_analyse
 
 st.set_page_config(
     page_title="Marketplace Zambie",
     page_icon="🇿🇲",
-    layout="wide",
+    layout="wide"
 )
 
-inject_css()
-
-st.title("🇿🇲 Marketplace Zambie")
-
-st.markdown(
-    """
-    ## Étude de marché
-
-    Cette étude vise à comprendre les besoins des clients
-    et des vendeurs pour une future marketplace en Zambie.
-    """
-)
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("🛍️ Client")
-    st.write(
-        "Vous êtes consommateur ? "
-        "Répondez à quelques questions concernant vos habitudes d'achat."
-    )
-
-    if st.button(
-        "➡️ Questionnaire Client",
-        use_container_width=True,
-        type="primary",
-    ):
-        st.switch_page("pages/Questionnaire_Client.py")
+# Navigation interne
+if "page" not in st.session_state:
+    st.session_state.page = "accueil"
 
 
-with col2:
-    st.subheader("🏬 Vendeur")
-    st.write(
-        "Vous êtes vendeur ? "
-        "Partagez votre expérience et vos besoins."
-    )
+def accueil():
+    st.title("🇿🇲 Marketplace Zambie")
+    st.write("Étude de marché pour une future marketplace en Zambie.")
 
-    if st.button(
-        "➡️ Questionnaire Vendeur",
-        use_container_width=True,
-    ):
-        st.switch_page("pages/Questionnaire_Vendeur.py")
+    col1, col2 = st.columns(2)
 
-st.divider()
+    with col1:
+        st.subheader("🛍️ Client")
+        st.write("Répondez au questionnaire destiné aux consommateurs.")
 
-st.caption("🇿🇲 Marketplace Zambie — Étude de marché")
+        if st.button("➡️ Questionnaire Client", use_container_width=True):
+            st.session_state.page = "client"
+            st.rerun()
+
+    with col2:
+        st.subheader("🏬 Vendeur")
+        st.write("Répondez au questionnaire destiné aux vendeurs.")
+
+        if st.button("➡️ Questionnaire Vendeur", use_container_width=True):
+            st.session_state.page = "vendeur"
+            st.rerun()
+
+
+# Affichage de la page sélectionnée
+if st.session_state.page == "accueil":
+    accueil()
+
+elif st.session_state.page == "client":
+    afficher_client()
+
+elif st.session_state.page == "vendeur":
+    afficher_vendeur()
+
+elif st.session_state.page == "analyse":
+    afficher_analyse()
