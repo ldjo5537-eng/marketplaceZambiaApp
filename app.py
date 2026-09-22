@@ -40,12 +40,11 @@ with col1:
             "Parlez-nous de vos habitudes d'achat en ligne, des difficultés "
             "rencontrées et de ce que vous attendez d'une nouvelle marketplace."
         )
-        # st.page_link(
-        #     "pages/Questionnaire_Client.py",
-        #     label="Commencer le questionnaire Client",
-        #     icon="➡️",
-        # )
-        st.info("👈 Utilisez le menu dans la barre latérale à gauche pour naviguer entre les questionnaires.")
+        st.page_link(
+            "pages/Questionnaire_Client.py",
+            label="Commencer le questionnaire Client",
+            icon="➡️",
+        )
 
 with col2:
     with st.container(border=True):
@@ -55,7 +54,7 @@ with col2:
             "et les conditions qui vous encourageraient à vendre en ligne."
         )
         st.page_link(
-            "pages/2_🏬_Questionnaire_Vendeur.py",
+            "pages/Questionnaire_Vendeur.py",
             label="Commencer le questionnaire Vendeur",
             icon="➡️",
         )
