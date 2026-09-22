@@ -192,17 +192,34 @@ def save_to_sheet(sheet_name: str, row_data: list) -> bool:
         st.error(f"Erreur lors de l'enregistrement : {e}")
         return False
 
-
-@st.cache_data(ttl=60)
-def load_sheet_data(sheet_name: str) -> pd.DataFrame:
+@st.cache_data(ttl=10)
+def load_sheet_data(sheet_name):
     try:
         client = get_gspread_client()
-        sheet = client.open_by_key(
-            st.secrets["spreadsheet_id"]
-        ).worksheet(sheet_name)
-        return pd.DataFrame(sheet.get_all_records())
-    except Exception:
+        spreadsheet = client.open_by_key(
+            "14M4kkg_A9TiFa5hNCB3j2e8KCJkpsQx31hN9wrgbfQw"
+        )
+
+        worksheet = spreadsheet.worksheet(sheet_name)
+
+        records = worksheet.get_all_records()
+
+        return pd.DataFrame(records)
+
+    except Exception as e:
+        st.error(f"Erreur lors de la lecture de l'onglet {sheet_name} : {e}")
         return pd.DataFrame()
+
+# @st.cache_data(ttl=60)
+# def load_sheet_data(sheet_name: str) -> pd.DataFrame:
+#     try:
+#         client = get_gspread_client()
+#         sheet = client.open_by_key(
+#             st.secrets["spreadsheet_id"]
+#         ).worksheet(sheet_name)
+#         return pd.DataFrame(sheet.get_all_records())
+#     except Exception:
+#         return pd.DataFrame()
 
 
 # =============================================================================
