@@ -22,11 +22,13 @@ st.set_page_config(
 # IDENTITÉ VISUELLE + OUTILS PARTAGÉS
 # =============================================================================
 
-PRIMARY_COLOR = "#0F5C4C"
-ACCENT_COLOR = "#E8871E"
-DARK_COLOR = "#12251F"
-BG_COLOR = "#F7F6F2"
-MUTED_TEXT = "#5B6763"
+PRIMARY_COLOR = "#176B87"
+ACCENT_COLOR = "#F4A261"
+DARK_COLOR = "#123047"
+BG_COLOR = "#F4F7FA"
+MUTED_TEXT = "#5D6B78"
+NAV_COLOR = "#123047"
+NAV_HOVER = "#1D4E6D"
 
 
 def inject_css():
@@ -98,11 +100,36 @@ def inject_css():
         }}
 
         section[data-testid="stSidebar"] {{
-            background-color: {DARK_COLOR};
+            background: linear-gradient(180deg, {NAV_COLOR} 0%, #0B2538 100%);
+            border-right: 1px solid rgba(255,255,255,0.08);
         }}
 
         section[data-testid="stSidebar"] * {{
-            color: #F1F5F3 !important;
+            color: #F7FAFC !important;
+        }}
+
+        section[data-testid="stSidebar"] .stButton > button {{
+            background: rgba(255,255,255,0.08) !important;
+            color: #FFFFFF !important;
+            border: 1px solid rgba(255,255,255,0.10) !important;
+            border-radius: 12px !important;
+            text-align: left !important;
+            box-shadow: none !important;
+            margin: 0.15rem 0;
+        }}
+
+        section[data-testid="stSidebar"] .stButton > button:hover {{
+            background: {NAV_HOVER} !important;
+            border-color: rgba(255,255,255,0.22) !important;
+            transform: translateY(-1px);
+        }}
+
+        section[data-testid="stSidebar"] hr {{
+            border-color: rgba(255,255,255,0.12);
+        }}
+
+        section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {{
+            color: #C9D6DF !important;
         }}
 
         footer {{
@@ -182,21 +209,33 @@ def get_gspread_client():
 def save_to_sheet(sheet_name, row):
     try:
         client = get_gspread_client()
-
         spreadsheet = client.open_by_key(
             "14M4kkg_A9TiFa5hNCB3j2e8KCJkpsQx31hN9wrgbfQw"
         )
-
         worksheet = spreadsheet.worksheet(sheet_name)
 
-        # Si la feuille est vide, créer les en-têtes
-        if worksheet.get_all_values() == []:
-            headers = list(row.keys())
+        headers = list(row.keys())
+        values = list(row.values())
+        existing = worksheet.get_all_values()
+
+        if not existing:
             worksheet.append_row(headers)
+        else:
+            current_headers = existing[0]
+            if current_headers != headers:
+                # Permet de repartir proprement d'une ancienne feuille
+                # de test contenant une seule ligne de réponses.
+                if len(existing) == 1:
+                    worksheet.clear()
+                    worksheet.append_row(headers)
+                else:
+                    raise ValueError(
+                        f"L'onglet {sheet_name} possède des en-têtes différents "
+                        "de ceux du questionnaire actuel. Supprimez les anciennes "
+                        "données de test de cet onglet puis réessayez."
+                    )
 
-        # Ajouter les réponses
-        worksheet.append_row(list(row.values()))
-
+        worksheet.append_row(values)
         return True
 
     except Exception as e:
@@ -419,8 +458,20 @@ class Navigation:
     @staticmethod
     def render_sidebar():
         with st.sidebar:
-            st.markdown("## 🇿🇲 Marketplace Zambie")
-            st.caption("Étude de marché")
+            st.markdown(
+                """
+                <div style="padding:0.5rem 0 0.8rem 0;">
+                    <div style="font-size:1.8rem;">🇿🇲</div>
+                    <div style="font-size:1.15rem;font-weight:700;color:#FFFFFF;">
+                        Marketplace Zambie
+                    </div>
+                    <div style="font-size:0.82rem;color:#C9D6DF;">
+                        Étude de marché
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
             st.divider()
 
@@ -894,9 +945,32 @@ class QuestionnaireClient:
                     }
                 )
 
-                row = [
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                ] + list(st.session_state.client_answers.values())
+                row = {
+                    "Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "Q1_Résident_Zambie": st.session_state.client_answers.get("q1", ""),
+                    "Q2_Ville": st.session_state.client_answers.get("q2", ""),
+                    "Q3_Âge": st.session_state.client_answers.get("q3", ""),
+                    "Q4_Statut": st.session_state.client_answers.get("q4", ""),
+                    "Q5_Achat_en_ligne_3_mois": st.session_state.client_answers.get("q5", ""),
+                    "Q6_Dernier_achat": st.session_state.client_answers.get("q6", ""),
+                    "Q7_Canal_achat": st.session_state.client_answers.get("q7", ""),
+                    "Q8_Découverte_produit": st.session_state.client_answers.get("q8", ""),
+                    "Q9_Mode_paiement": st.session_state.client_answers.get("q9", ""),
+                    "Q10_Réception_commande": st.session_state.client_answers.get("q10", ""),
+                    "Q11_Montant_dépensé": st.session_state.client_answers.get("q11", ""),
+                    "Q12_Problème_achat": st.session_state.client_answers.get("q12", ""),
+                    "Q13_Problème_rencontré": st.session_state.client_answers.get("q13", ""),
+                    "Q14_Freins_achat_en_ligne": st.session_state.client_answers.get("q14", ""),
+                    "Q15_Intérêt_marketplace": st.session_state.client_answers.get("q15", ""),
+                    "Q16_Services_importants": st.session_state.client_answers.get("q16", ""),
+                    "Q17_Raison_marketplace": st.session_state.client_answers.get("q17", ""),
+                    "Q18_Payer_livraison": st.session_state.client_answers.get("q18", ""),
+                    "Q19_Montant_livraison": st.session_state.client_answers.get("q19", ""),
+                    "Q20_Facteurs_confiance": st.session_state.client_answers.get("q20", ""),
+                    "Q21_Produit_souhaité": st.session_state.client_answers.get("q21", ""),
+                    "Q22_Suggestion": st.session_state.client_answers.get("q22", ""),
+                    "Q23_Source_questionnaire": st.session_state.client_answers.get("q23", ""),
+                }
 
                 with st.spinner("Enregistrement en cours…"):
                     success = save_to_sheet("Clients", row)
@@ -1283,9 +1357,29 @@ class QuestionnaireVendeur:
                     }
                 )
 
-                row = [
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                ] + list(st.session_state.vendeur_answers.values())
+                row = {
+                    "Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "Q1_Activité_en_Zambie": st.session_state.vendeur_answers.get("vq1", ""),
+                    "Q2_Ville": st.session_state.vendeur_answers.get("vq2", ""),
+                    "Q3_Ancienneté": st.session_state.vendeur_answers.get("vq3", ""),
+                    "Q4_Produits_vendus": st.session_state.vendeur_answers.get("vq4", ""),
+                    "Q5_Canaux_de_vente": st.session_state.vendeur_answers.get("vq5", ""),
+                    "Q6_Commandes_en_ligne": st.session_state.vendeur_answers.get("vq6", ""),
+                    "Q7_Commandes_par_mois": st.session_state.vendeur_answers.get("vq7", ""),
+                    "Q8_Problème_vente_en_ligne": st.session_state.vendeur_answers.get("vq8", ""),
+                    "Q9_Intérêt_marketplace": st.session_state.vendeur_answers.get("vq9", ""),
+                    "Q10_Services_utiles": st.session_state.vendeur_answers.get("vq10", ""),
+                    "Q11_Commission": st.session_state.vendeur_answers.get("vq11", ""),
+                    "Q12_Modèle_préféré": st.session_state.vendeur_answers.get("vq12", ""),
+                    "Q13_Commission_acceptable": st.session_state.vendeur_answers.get("vq13", ""),
+                    "Q14_Paiement_sécurisé": st.session_state.vendeur_answers.get("vq14", ""),
+                    "Q15_Vérification_identité": st.session_state.vendeur_answers.get("vq15", ""),
+                    "Q16_Service_livraison": st.session_state.vendeur_answers.get("vq16", ""),
+                    "Q17_Freins_marketplace": st.session_state.vendeur_answers.get("vq17", ""),
+                    "Q18_Catégories_demandées": st.session_state.vendeur_answers.get("vq18", ""),
+                    "Q19_Attentes_marketplace": st.session_state.vendeur_answers.get("vq19", ""),
+                    "Q20_Source_questionnaire": st.session_state.vendeur_answers.get("vq20", ""),
+                }
 
                 with st.spinner("Enregistrement en cours…"):
                     success = save_to_sheet("Vendeurs", row)
@@ -1388,6 +1482,11 @@ class Analyse:
         if st.button("🔄 Rafraîchir les données"):
             st.cache_data.clear()
             st.rerun()
+
+        st.caption(
+            "Les réponses sont récupérées automatiquement depuis les onglets "
+            "Clients et Vendeurs de Google Sheets."
+        )
 
         tab_clients, tab_vendeurs = st.tabs(
             ["👥 Clients", "🏬 Vendeurs"]
