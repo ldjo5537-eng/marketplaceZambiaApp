@@ -179,18 +179,41 @@ def get_gspread_client():
 #     )
 #     return gspread.authorize(credentials)
 
-
-def save_to_sheet(sheet_name: str, row_data: list) -> bool:
+def save_to_sheet(sheet_name, row):
     try:
         client = get_gspread_client()
-        sheet = client.open_by_key(
-            st.secrets["spreadsheet_id"]
-        ).worksheet(sheet_name)
-        sheet.append_row(row_data)
+
+        spreadsheet = client.open_by_key(
+            "14M4kkg_A9TiFa5hNCB3j2e8KCJkpsQx31hN9wrgbfQw"
+        )
+
+        worksheet = spreadsheet.worksheet(sheet_name)
+
+        # Si la feuille est vide, créer les en-têtes
+        if worksheet.get_all_values() == []:
+            headers = list(row.keys())
+            worksheet.append_row(headers)
+
+        # Ajouter les réponses
+        worksheet.append_row(list(row.values()))
+
         return True
+
     except Exception as e:
         st.error(f"Erreur lors de l'enregistrement : {e}")
         return False
+
+# def save_to_sheet(sheet_name: str, row_data: list) -> bool:
+#     try:
+#         client = get_gspread_client()
+#         sheet = client.open_by_key(
+#             st.secrets["spreadsheet_id"]
+#         ).worksheet(sheet_name)
+#         sheet.append_row(row_data)
+#         return True
+#     except Exception as e:
+#         st.error(f"Erreur lors de l'enregistrement : {e}")
+#         return False
 
 @st.cache_data(ttl=10)
 def load_sheet_data(sheet_name):
