@@ -137,8 +137,9 @@ def get_gspread_client():
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive",
     ]
+    data = dict(st.secrets["google_credentials"])
 
-    data = dict(st.secrets["gcp_service_account"])
+    # data = dict(st.secrets["gcp_service_account"])
 
     private_key = data["private_key"]
 
