@@ -196,20 +196,66 @@ def save_to_sheet(sheet_name: str, row_data: list) -> bool:
 def load_sheet_data(sheet_name):
     try:
         client = get_gspread_client()
+
         spreadsheet = client.open_by_key(
             "14M4kkg_A9TiFa5hNCB3j2e8KCJkpsQx31hN9wrgbfQw"
         )
 
         worksheet = spreadsheet.worksheet(sheet_name)
 
-        records = worksheet.get_all_records()
+        values = worksheet.get_all_values()
 
-        return pd.DataFrame(records)
+        if not values:
+            return pd.DataFrame()
+
+        # Première ligne = en-têtes
+        headers = values[0]
+
+        # Si les en-têtes sont vides ou incorrects,
+        # on utilise des noms de colonnes génériques
+        if not any(str(h).strip() for h in headers):
+            headers = [f"Question_{i+1}" for i in range(len(values[0]))]
+
+        # Évite les colonnes dupliquées
+        used = {}
+        clean_headers = []
+
+        for i, header in enumerate(headers):
+            header = str(header).strip()
+
+            if not header:
+                header = f"Question_{i+1}"
+
+            if header in used:
+                used[header] += 1
+                header = f"{header}_{used[header]}"
+            else:
+                used[header] = 1
+
+            clean_headers.append(header)
+
+        # Les lignes suivantes = réponses
+        data = values[1:]
+
+        # Complète les lignes trop courtes
+        for row in data:
+            while len(row) < len(clean_headers):
+                row.append("")
+
+        # Ignore les lignes complètement vides
+        data = [
+            row[:len(clean_headers)]
+            for row in data
+            if any(str(cell).strip() for cell in row)
+        ]
+
+        return pd.DataFrame(data, columns=clean_headers)
 
     except Exception as e:
-        st.error(f"Erreur lors de la lecture de l'onglet {sheet_name} : {e}")
+        st.error(
+            f"Erreur lors de la lecture de l'onglet {sheet_name} : {e}"
+        )
         return pd.DataFrame()
-
 # @st.cache_data(ttl=60)
 # def load_sheet_data(sheet_name: str) -> pd.DataFrame:
 #     try:
