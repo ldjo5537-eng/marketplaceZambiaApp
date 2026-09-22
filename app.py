@@ -41,7 +41,7 @@ with col1:
             "rencontrées et de ce que vous attendez d'une nouvelle marketplace."
         )
         st.page_link(
-            "pages/questionnaire_client.py",
+            "questionnaire_client.py",
             label="Commencer le questionnaire Client",
             icon="➡️",
         )
